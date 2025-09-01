@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: chesscrypt
+    env: docker
+    plan: free
+    autoDeploy: true
+    dockerCommand: null
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: 0
+      - key: APP_MODULE
+        value: api_server:app
+    healthCheckPath: /api/health
