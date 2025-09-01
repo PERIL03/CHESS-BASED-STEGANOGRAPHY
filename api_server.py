@@ -66,6 +66,14 @@ def health_check():
         }
     })
 
+@app.route("/", methods=["GET"])
+def root():
+    return jsonify({
+        "service": "ChessCrypt API",
+        "status": "running",
+        "message": "Use /api/health for health check and /api/* for endpoints"
+    })
+
 @app.route("/api/wallet/connect", methods=["POST"])
 def connect_wallet():
     """Handle Coinbase Wallet connection"""
@@ -544,6 +552,14 @@ def status():
         "pgn_files": len(pgn_metadata_store),
         "server_time": datetime.now().isoformat()
     })
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({
+        "error": "Not Found",
+        "path": request.path,
+        "hint": "Use /api/health for health check and /api/* for endpoints"
+    }), 404
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 8000))
