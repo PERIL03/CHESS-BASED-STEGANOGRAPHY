@@ -20,11 +20,16 @@ load_dotenv()
 
 # Configure CORS (lock down to specific origins if provided)
 CORS_ORIGINS = os.getenv('CORS_ORIGINS')
+CORS_SUPPORTS_CREDENTIALS = os.getenv('CORS_SUPPORTS_CREDENTIALS', '0').lower() in ['1', 'true', 'yes']
 if CORS_ORIGINS:
     origins = [o.strip() for o in CORS_ORIGINS.split(',') if o.strip()]
-    CORS(app, resources={r"/api/*": {"origins": origins}})
+    CORS(app, resources={
+        r"/api/*": {"origins": origins},
+        r"/health": {"origins": origins},
+        r"/": {"origins": origins}
+    }, supports_credentials=CORS_SUPPORTS_CREDENTIALS)
 else:
-    CORS(app)
+    CORS(app, supports_credentials=CORS_SUPPORTS_CREDENTIALS)
 
 # Enforce maximum request size (default 16MB)
 app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_FILE_SIZE', 16 * 1024 * 1024))
@@ -37,6 +42,8 @@ if os.getenv('SECRET_KEY'):
 X402_ENCODE_PRICE = os.getenv('X402_ENCODE_PRICE', '2000000000000000')  # 0.002 ETH
 X402_DECODE_PRICE = os.getenv('X402_DECODE_PRICE', '1000000000000000')  # 0.001 ETH
 PAYMENT_WALLET_ADDRESS = os.getenv('PAYMENT_WALLET_ADDRESS', '0x742d35Cc6634C0532925a3b8D4C9db96590c6C87')
+# Hackathon mode: disable strict signature validation if set
+DISABLE_SIGNATURE_VALIDATION = os.getenv('DISABLE_SIGNATURE_VALIDATION', '0').lower() in ['1', 'true', 'yes']
 
 # In-memory storage for demo
 transaction_store = {}
@@ -66,6 +73,10 @@ def health_check():
         }
     })
 
+@app.route("/health", methods=["GET"])
+def health_check_alias():
+    return health_check()
+
 @app.route("/", methods=["GET"])
 def root():
     return jsonify({
@@ -83,12 +94,20 @@ def connect_wallet():
         signature = data.get('signature')
         message = data.get('message')
         
-        if not all([wallet_address, signature, message]):
-            return jsonify({"error": "Missing wallet credentials"}), 400
-        
-        # Validate signature (implement proper validation in production)
-        if not validate_wallet_signature(wallet_address, signature, message):
-            return jsonify({"error": "Invalid wallet signature"}), 401
+        # Require wallet address always
+        if not wallet_address:
+            return jsonify({"error": "Missing wallet address"}), 400
+
+        # Signature validation logic
+        if not DISABLE_SIGNATURE_VALIDATION:
+            # In strict mode, both signature and message must be provided and valid
+            if not all([signature, message]):
+                return jsonify({"error": "Missing wallet credentials (signature/message)"}), 400
+            if not validate_wallet_signature(wallet_address, signature, message):
+                return jsonify({"error": "Invalid wallet signature"}), 401
+        else:
+            # Hackathon mode: allow connection without signature
+            app.logger.info("Wallet connect in hackathon mode: skipping signature validation")
         
         # Generate session token
         session_token = generate_transaction_id()
@@ -97,6 +116,7 @@ def connect_wallet():
             "success": True,
             "session_token": session_token,
             "wallet_address": wallet_address,
+            "hackathon_mode": DISABLE_SIGNATURE_VALIDATION,
             "message": "Wallet connected successfully"
         })
         
