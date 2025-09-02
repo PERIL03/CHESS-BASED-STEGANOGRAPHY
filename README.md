@@ -1,3 +1,9 @@
+
+<img width="1680" height="1050" alt="Screenshot 2025-09-02 at 11 10 46" src="https://github.com/user-attachments/assets/f7888382-68df-40f5-b5f3-180a0e10d382" />
+
+
+
+
 # ChessCrypt DApp - Decentralized Chess Steganography
 
 A decentralized application that combines chess-based steganography with blockchain technology, allowing users to hide and retrieve secret messages inside valid PGN chess game files.
