@@ -1,7 +1,8 @@
 
+<img width="1680" height="1050" alt="Screenshot 2025-09-02 at 11 12 42" src="https://github.com/user-attachments/assets/db92fc6b-ca7f-4787-8588-d0ef5405f49a" />
+
+
 <img width="1680" height="1050" alt="Screenshot 2025-09-02 at 11 10 46" src="https://github.com/user-attachments/assets/f7888382-68df-40f5-b5f3-180a0e10d382" />
-
-
 
 
 # ChessCrypt DApp - Decentralized Chess Steganography
